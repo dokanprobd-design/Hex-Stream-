@@ -1,0 +1,18 @@
+
+{
+  "id": "CineFreak",
+  "name": "CineFreak",
+  "version": "1.0.0",
+  "description": "Search movies using the Yagaverse search API",
+  "author": "Hex-Stream",
+  "type": "movie",
+  "entry": "index.js",
+  "capabilities": [
+    "search"
+  ],
+  "search": {
+    "enabled": true,
+    "supportsPagination": true,
+    "pageSize": 30
+  }
+}
