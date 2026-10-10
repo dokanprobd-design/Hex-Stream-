@@ -1,4 +1,3 @@
-
 const API_URL = "https://search.yagaverse.net/api/search";
 const PAGE_SIZE = 30;
 
@@ -50,13 +49,14 @@ async function search(query, page = 1) {
     source: "yagaverse"
   }));
 
+  const total = Number(data.found || 0);
+  const responsePage = Number(data.page || currentPage);
+
   return {
     results,
-    total: Number(data.found || 0),
-    page: Number(data.page || currentPage),
-    hasMore:
-      Number(data.page || currentPage) * PAGE_SIZE <
-      Number(data.found || 0)
+    total,
+    page: responsePage,
+    hasMore: responsePage * PAGE_SIZE < total
   };
 }
 
