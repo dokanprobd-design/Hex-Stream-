@@ -1,7 +1,7 @@
-/**
- * hexplugins SDK v1 — optional helpers for provider plugins.
- * Import in any plugin:  import { sdk } from "https://your-cdn/sdk.js";
- */
+/* =========================================================
+   hexplugins SDK v1
+   Shared HTML/HTTP helpers for provider plugins.
+   ========================================================= */
 
 export const sdk = {
   /* ---------- Strings ---------- */
@@ -32,25 +32,24 @@ export const sdk = {
   },
 
   text(html = "") {
-    return sdk.decodeEntities(
-      sdk.stripTags(html).replace(/\s+/g, " ")
-    );
+    return sdk.decodeEntities(sdk.stripTags(html).replace(/\s+/g, " "));
   },
 
   /* ---------- URLs ---------- */
 
   absolute(url, base) {
     if (!url) return "";
+    const v = sdk.decodeEntities(String(url).trim());
+    if (!v || v.startsWith("data:") || v.startsWith("javascript:")) return "";
     try {
-      return new URL(url, base).href;
+      return new URL(v, base).href;
     } catch {
       return "";
     }
   },
 
-  /* ---------- DOM-lite ---------- */
+  /* ---------- Attribute / tag helpers ---------- */
 
-  /** Read an attribute from an HTML tag string. Tries names in order. */
   attr(tag = "", names = []) {
     for (const name of names) {
       const re = new RegExp(
@@ -64,13 +63,17 @@ export const sdk = {
     return "";
   },
 
-  /** Find every element with the given class. Returns [{ tag, openTag, outer }]. */
+  /**
+   * Find every element whose class list contains `className`.
+   * Returns [{ tag, openTag, outer }].
+   */
   findByClass(html, className) {
     const out = [];
     const opener = new RegExp(
       `<([a-zA-Z][\\w-]*)\\b(?=[^>]*\\bclass\\s*=\\s*["'][^"']*\\b${className}\\b)[^>]*>`,
       "gi"
     );
+
     let match;
     while ((match = opener.exec(html)) !== null) {
       const tagName = match[1];
@@ -98,6 +101,7 @@ export const sdk = {
           if (depth === 0) closeEnd = cursor;
         }
       }
+
       if (closeEnd === -1) continue;
       out.push({
         tag: tagName,
@@ -135,7 +139,9 @@ export const sdk = {
         const data = JSON.parse(sdk.decodeEntities(b[1]));
         if (data["@graph"]) out.push(...data["@graph"]);
         else out.push(data);
-      } catch {}
+      } catch {
+        /* ignore malformed JSON-LD */
+      }
     }
     return out;
   },
@@ -147,9 +153,7 @@ export const sdk = {
       method: "GET",
       headers: { Accept: "text/html", ...headers },
     });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} for ${url}`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     return res.text();
   },
 
@@ -158,17 +162,12 @@ export const sdk = {
       method: "GET",
       headers: { Accept: "application/json", ...headers },
     });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} for ${url}`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     return res.json();
   },
 
-  /* ---------- Pagination helper ---------- */
+  /* ---------- Response builder ---------- */
 
-  /**
-   * Build a SearchResponse. Automatically dedupes by `url`.
-   */
   packSearch(items, page, hasMore) {
     const seen = new Set();
     const results = [];
@@ -186,3 +185,5 @@ export const sdk = {
     };
   },
 };
+
+export default sdk;
