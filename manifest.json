@@ -1,9 +1,11 @@
 {
-  "id": "example",
-  "name": "Example Provider",
+  "id": "cinefreak",
+  "name": "CineFreak",
   "version": "1.0.0",
-  "description": "A minimal example",
+  "description": "Movies and web series with Hindi Dubbed, Dual Audio, HEVC.",
+  "author": "CineFreak",
+  "type": "scraper",
   "entry": "index.js",
-  "baseUrl": "https://example.com/",
-   "icon": "https://myprovider.com/favicon.ico"
+  "baseUrl": "https://cinefreak.net/",
+  "icon": "https://cinefreak.net/favicon.ico"
 }
