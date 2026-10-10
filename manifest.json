@@ -2,10 +2,10 @@
   "id": "cinefreak",
   "name": "CineFreak",
   "version": "1.0.0",
-  "description": "Movies and web series with Hindi Dubbed, Dual Audio, HEVC.",
+  "description": "Movies and web series with Hindi Dubbed, Dual Audio, HEVC, 4K.",
   "author": "CineFreak",
   "type": "scraper",
   "entry": "index.js",
   "baseUrl": "https://cinefreak.net/",
-  "icon": "https://cinefreak.net/favicon.ico"
+  "icon": "https://cinefreak.net/wp-content/uploads/2024/08/cropped-cgk-192x192.png"
 }
