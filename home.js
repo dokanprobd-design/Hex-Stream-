@@ -1,6 +1,14 @@
 const HOME_URL = "https://cinefreak.net/";
 const DUAL_AUDIO_URL = "https://cinefreak.net/dual-audio/";
 
+const CATEGORIES = [
+  { id: "dual-audio", name: "Dual Audio", url: DUAL_AUDIO_URL },
+  // add more, e.g.:
+  // { id: "south", name: "South Movies", url: "https://cinefreak.net/south/" },
+  // { id: "hindi", name: "Hindi", url: "https://cinefreak.net/hindi/" },
+];
+
+/* ---------- helpers (unchanged) ---------- */
 function decodeEntities(text = "") {
   return text
     .replace(/&amp;/g, "&")
@@ -8,21 +16,15 @@ function decodeEntities(text = "") {
     .replace(/&#39;|&apos;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&#(\d+);/g, (_, code) =>
-      String.fromCharCode(Number(code))
-    )
-    .replace(/&#x([0-9a-f]+);/gi, (_, code) =>
-      String.fromCharCode(parseInt(code, 16))
+    .replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, c) =>
+      String.fromCharCode(parseInt(c, 16))
     );
 }
 
 function absoluteUrl(url = "") {
   const value = decodeEntities(url.trim());
-
-  if (!value || value.startsWith("data:")) {
-    return "";
-  }
-
+  if (!value || value.startsWith("data:")) return "";
   try {
     return new URL(value, HOME_URL).href;
   } catch {
@@ -36,15 +38,10 @@ function getAttribute(tag = "", names = []) {
       `\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
       "i"
     );
-
     const match = tag.match(regex);
     const value = match?.[1] ?? match?.[2] ?? match?.[3];
-
-    if (value) {
-      return decodeEntities(value);
-    }
+    if (value) return decodeEntities(value);
   }
-
   return "";
 }
 
@@ -62,46 +59,33 @@ function getText(html = "") {
 function getImage(card) {
   const match = card.match(/<img\b[^>]*>/i);
   const imageTag = match?.[0] || "";
-
   return absoluteUrl(
     getAttribute(imageTag, [
       "data-src",
       "data-lazy-src",
       "data-original",
-      "src"
+      "src",
     ])
   );
 }
 
 function getFirstLink(html) {
   const match = html.match(/<a\b[^>]*>/i);
-
-  return absoluteUrl(
-    getAttribute(match?.[0] || "", ["href"])
-  );
+  return absoluteUrl(getAttribute(match?.[0] || "", ["href"]));
 }
 
 function getCardTitle(card) {
   const titleMatch = card.match(
     /<[^>]*class=["'][^"']*movie-card-title[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i
   );
-
-  if (titleMatch?.[1]) {
-    return getText(titleMatch[1]);
-  }
+  if (titleMatch?.[1]) return getText(titleMatch[1]);
 
   const imageTag = card.match(/<img\b[^>]*>/i)?.[0] || "";
-
-  return (
-    getAttribute(imageTag, ["alt", "title"]) ||
-    ""
-  );
+  return getAttribute(imageTag, ["alt", "title"]) || "";
 }
 
 function extractCards(html, source = "cinefreak") {
   const cards = [];
-
-  // Locate movie-card elements and read their contents.
   const cardRegex =
     /<div\b(?=[^>]*\bclass\s*=\s*["'][^"']*\bmovie-card\b)[^>]*>[\s\S]*?(?=<div\b(?=[^>]*\bclass\s*=\s*["'][^"']*\bmovie-card\b)|$)/gi;
 
@@ -115,9 +99,7 @@ function extractCards(html, source = "cinefreak") {
       /<[^>]*class=["'][^"']*quality-badges[^"']*["'][^>]*>([\s\S]*?)<\/[^>]+>/i
     );
 
-    if (!url || !title) {
-      continue;
-    }
+    if (!url || !title) continue;
 
     cards.push({
       id: url,
@@ -127,20 +109,18 @@ function extractCards(html, source = "cinefreak") {
       poster,
       thumbnail: poster,
       quality: getText(qualityMatch?.[1] || ""),
-      source
+      source,
     });
   }
 
-  // Avoid duplicate cards if the page repeats a movie.
   return cards.filter(
     (movie, index, all) =>
-      all.findIndex(item => item.url === movie.url) === index
+      all.findIndex((item) => item.url === movie.url) === index
   );
 }
 
 function extractFeatured(html) {
   const featured = [];
-
   const slideRegex =
     /<[^>]+\bclass\s*=\s*["'][^"']*\bcine-slide\b[^"']*["'][^>]*>[\s\S]*?(?=<[^>]+\bclass\s*=\s*["'][^"']*\bcine-slide\b[^"']*["'][^>]*>|$)/gi;
 
@@ -152,17 +132,11 @@ function extractFeatured(html) {
     const headingMatch = slide.match(
       /<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i
     );
-
     const title =
       getText(headingMatch?.[1] || "") ||
-      getAttribute(
-        slide.match(/<img\b[^>]*>/i)?.[0] || "",
-        ["alt", "title"]
-      );
+      getAttribute(slide.match(/<img\b[^>]*>/i)?.[0] || "", ["alt", "title"]);
 
-    if (!url || !title) {
-      continue;
-    }
+    if (!url || !title) continue;
 
     featured.push({
       id: url,
@@ -170,7 +144,7 @@ function extractFeatured(html) {
       url,
       poster,
       thumbnail: poster,
-      source: "cinefreak"
+      source: "cinefreak",
     });
   }
 
@@ -180,67 +154,91 @@ function extractFeatured(html) {
 async function fetchPage(url) {
   const response = await fetch(url, {
     method: "GET",
-    headers: {
-      Accept: "text/html"
-    }
+    headers: { Accept: "text/html" },
   });
-
   if (!response.ok) {
-    throw new Error(
-      `CineFreak request failed: HTTP ${response.status} (${url})`
-    );
+    throw new Error(`CineFreak request failed: HTTP ${response.status} (${url})`);
   }
-
   return response.text();
 }
 
+/* ---------- Home ---------- */
+
 async function getHome() {
-  const [homeHtml, dualAudioHtml] = await Promise.all([
-    fetchPage(HOME_URL),
-    fetchPage(DUAL_AUDIO_URL)
-  ]);
+  const homeHtml = await fetchPage(HOME_URL);
 
-  const latestReleases = extractCards(
-    homeHtml,
-    "cinefreak"
+  // Fetch all categories in parallel
+  const categoryPages = await Promise.all(
+    CATEGORIES.map(async (cat) => {
+      try {
+        const html =
+          cat.url === HOME_URL ? homeHtml : await fetchPage(cat.url);
+        return { cat, items: extractCards(html, "cinefreak") };
+      } catch {
+        return { cat, items: [] };
+      }
+    })
   );
 
-  const dualAudio = extractCards(
-    dualAudioHtml,
-    "cinefreak"
-  );
+  const sections = categoryPages
+    .filter(({ items }) => items.length > 0)
+    .map(({ cat, items }) => ({
+      id: cat.id,
+      title: cat.name,
+      url: cat.url,
+      items,
+    }));
 
   return {
     source: "cinefreak",
     name: "CineFreak",
-
     featured: extractFeatured(homeHtml),
+    sections,
+    categories: CATEGORIES,
+  };
+}
 
-    sections: [
-      {
-        id: "latest-releases",
-        title: "Latest Releases",
-        url: HOME_URL,
-        items: latestReleases
-      },
-      {
-        id: "dual-audio",
-        title: "Dual Audio",
-        url: DUAL_AUDIO_URL,
-        items: dualAudio
-      }
-    ],
+/* ---------- Category (See All) ---------- */
 
-    categories: [
-      {
-        id: "dual-audio",
-        name: "Dual Audio",
-        url: DUAL_AUDIO_URL
-      }
-    ]
+async function getCategory(categoryId, page = 1) {
+  const cat = CATEGORIES.find((c) => c.id === categoryId);
+  if (!cat) {
+    return { results: [], total: 0, page, hasMore: false };
+  }
+
+  // If your site uses ?page=N for pagination, adjust here.
+  const url = page > 1 ? `${cat.url}?page=${page}` : cat.url;
+  const html = await fetchPage(url);
+  const items = extractCards(html, "cinefreak");
+
+  return {
+    results: items,
+    total: items.length,
+    page,
+    hasMore: false, // set true if the site exposes a next page
+  };
+}
+
+/* ---------- Search ---------- */
+
+async function search(query, page = 1) {
+  const q = String(query || "").trim();
+  if (!q) return { results: [], total: 0, page: 1, hasMore: false };
+
+  const url = `${HOME_URL}?s=${encodeURIComponent(q)}&page=${page}`;
+  const html = await fetchPage(url);
+  const items = extractCards(html, "cinefreak");
+
+  return {
+    results: items,
+    total: items.length,
+    page,
+    hasMore: false,
   };
 }
 
 export default {
-  getHome
+  search,
+  getHome,
+  getCategory,
 };
