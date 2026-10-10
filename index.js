@@ -1,3 +1,5 @@
+import home from "./home.js";
+
 const API_URL = "https://search.yagaverse.net/api/search";
 const PAGE_SIZE = 30;
 
@@ -5,12 +7,7 @@ async function search(query, page = 1) {
   const q = String(query || "").trim();
 
   if (!q) {
-    return {
-      results: [],
-      total: 0,
-      page: 1,
-      hasMore: false
-    };
+    return { results: [], total: 0, page: 1, hasMore: false };
   }
 
   const currentPage = Math.max(1, Number(page) || 1);
@@ -22,15 +19,11 @@ async function search(query, page = 1) {
 
   const response = await fetch(url.toString(), {
     method: "GET",
-    headers: {
-      Accept: "application/json"
-    }
+    headers: { Accept: "application/json" },
   });
 
   if (!response.ok) {
-    throw new Error(
-      `Yagaverse search failed: HTTP ${response.status}`
-    );
+    throw new Error(`Yagaverse search failed: HTTP ${response.status}`);
   }
 
   const data = await response.json();
@@ -41,12 +34,10 @@ async function search(query, page = 1) {
     slug: document.slug || "",
     poster: document.thumb || "",
     thumbnail: document.thumb || "",
-    categories: Array.isArray(document.cats)
-      ? document.cats
-      : [],
+    categories: Array.isArray(document.cats) ? document.cats : [],
     quality: document.quality || "",
     date: document.date || null,
-    source: "yagaverse"
+    source: "yagaverse",
   }));
 
   const total = Number(data.found || 0);
@@ -56,10 +47,11 @@ async function search(query, page = 1) {
     results,
     total,
     page: responsePage,
-    hasMore: responsePage * PAGE_SIZE < total
+    hasMore: responsePage * PAGE_SIZE < total,
   };
 }
 
 export default {
-  search
+  search,
+  getHome: home.getHome,
 };
