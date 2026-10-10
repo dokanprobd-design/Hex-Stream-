@@ -1,11 +1,9 @@
 {
-  "id": "myprovider",
-  "name": "My Provider",
+  "id": "example",
+  "name": "Example Provider",
   "version": "1.0.0",
-  "description": "Short description shown in Settings",
-  "author": "YourName",
-  "type": "scraper",
+  "description": "A minimal example",
   "entry": "index.js",
-  "baseUrl": "https://myprovider.com/",
-  "icon": "https://myprovider.com/favicon.ico"
+  "baseUrl": "https://example.com/",
+   "icon": "https://myprovider.com/favicon.ico"
 }
