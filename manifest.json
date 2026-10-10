@@ -1,9 +1,11 @@
 {
-  "id": "CineFreak",
-  "name": "CineFreak",
-  "version": "1.2.0",
-  "description": "Search movies using Yagaverse and browse CineFreak homepage sections",
-  "author": "Hex-Stream",
-  "type": "movie",
-  "entry": "index.js"
+  "id": "myprovider",
+  "name": "My Provider",
+  "version": "1.0.0",
+  "description": "Short description shown in Settings",
+  "author": "YourName",
+  "type": "scraper",
+  "entry": "index.js",
+  "baseUrl": "https://myprovider.com/",
+  "icon": "https://myprovider.com/favicon.ico"
 }
